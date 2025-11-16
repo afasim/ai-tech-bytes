@@ -3,9 +3,14 @@
 
 # News fetching
 requests>=2.31.0
+feedparser>=6.0.0
 
 # Text-to-Speech
 gTTS>=2.5.0
+
+# Text Summarization (AI)
+transformers>=4.30.0
+torch>=2.0.0
 
 # Video processing
 moviepy>=1.0.3
