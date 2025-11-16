@@ -69,8 +69,7 @@ def save_news_to_file(news_items, filename='data/today_news.json'):
     
     news_data = {
         'date': datetime.now().isoformat(),
-        'articles': [{'title': title, 'description': desc} for title, desc in news_items]
-    }
+        'articles': news_items    }
     
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(news_data, f, indent=2, ensure_ascii=False)
