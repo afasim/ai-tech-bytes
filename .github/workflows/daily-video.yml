@@ -164,9 +164,3 @@ jobs:
   #         gsutil -m cp -r output/* gs://ai-tech-bytes-videos/$(date +%Y-%m-%d)/
   #         gsutil -m cp data/today_news.json gs://ai-tech-bytes-videos/$(date +%Y-%m-%d)/
 
-notifications:
-  # Configure webhook or email notifications (optional)
-  # Example Slack notification: use slackapi/slack-github-action
-  email:
-    on_failure: always
-    on_success: never
