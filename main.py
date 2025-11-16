@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 AI Tech Bytes - Main Orchestrator
 Automated pipeline: Fetch AI news -> Generate TTS -> Create Video -> Upload
@@ -34,7 +35,7 @@ def run_pipeline(skip_news=False, skip_audio=False, skip_video=False):
     """
     print_banner()
     
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Starting pipeline...\n")
+    print("[{}] Starting pipeline...\n".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
     
     # Step 1: Fetch AI News
     if not skip_news:
@@ -45,11 +46,11 @@ def run_pipeline(skip_news=False, skip_audio=False, skip_video=False):
             news_items = fetch_ai_news(num_articles=3)
             if news_items:
                 news_file = save_news_to_file(news_items)
-                print(f"[OK] News fetched and saved: {news_file}")
+                print("[OK] News fetched and saved: {}".format(news_file))
             else:
                 print("[WARNING] No news items fetched. Using fallback.")
         except Exception as e:
-            print(f"[ERROR] Error fetching news: {e}")
+            print("[ERROR] Error fetching news: {}".format(e))
             return False
     else:
         print("\n[SKIP] Skipping news fetch (using existing data)")
@@ -62,12 +63,12 @@ def run_pipeline(skip_news=False, skip_audio=False, skip_video=False):
         try:
             audio_file = generate_audio_from_news()
             if audio_file:
-                print(f"[OK] Audio generated: {audio_file}")
+                print("[OK] Audio generated: {}".format(audio_file))
             else:
                 print("[ERROR] Audio generation failed")
                 return False
         except Exception as e:
-            print(f"[ERROR] Error generating audio: {e}")
+            print("[ERROR] Error generating audio: {}".format(e))
             return False
     else:
         print("\n[SKIP] Skipping audio generation (using existing audio)")
@@ -80,14 +81,14 @@ def run_pipeline(skip_news=False, skip_audio=False, skip_video=False):
         try:
             videos = create_multiple_formats()
             if videos:
-                print(f"\n[OK] Created {len(videos)} video(s)")
+                print("\n[OK] Created {} video(s)".format(len(videos)))
                 for video in videos:
-                    print(f"  - {video}")
+                    print("  - {}".format(video))
             else:
                 print("[ERROR] Video creation failed")
                 return False
         except Exception as e:
-            print(f"[ERROR] Error creating videos: {e}")
+            print("[ERROR] Error creating videos: {}".format(e))
             import traceback
             traceback.print_exc()
             return False
@@ -106,7 +107,7 @@ def run_pipeline(skip_news=False, skip_audio=False, skip_video=False):
     print("\n" + "="*70)
     print("[OK] PIPELINE COMPLETED SUCCESSFULLY")
     print("="*70)
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Done!\n")
+    print("[{}] Done!\n".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
     
     return True
 
@@ -145,7 +146,7 @@ def main():
         print("\n\n[WARNING] Pipeline interrupted by user")
         sys.exit(1)
     except Exception as e:
-        print(f"\n\n[ERROR] Fatal error: {e}")
+        print("\n\n[ERROR] Fatal error: {}".format(e))
         import traceback
         traceback.print_exc()
         sys.exit(1)
