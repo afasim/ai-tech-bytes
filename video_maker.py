@@ -2,8 +2,7 @@
 """
 Video Maker
 Creates short-form videos from audio and text for YouTube/TikTok
-Uses PIL for text rendering and adds visual elements throughout
-"""
+Enhanced with professional animations from video_animations module (particles, smooth transitions, dynamic effects)"""
 
 import os
 import json
@@ -11,6 +10,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from moviepy.editor import (
     AudioFileClip, ImageClip, CompositeVideoClip, concatenate_videoclips
+import video_animations as va
 )
 
 # Video settings for social media
