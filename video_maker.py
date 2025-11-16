@@ -140,6 +140,36 @@ def create_ai_icon_frame(width, height, text=""):
     
     return np.array(img)
 
+def create_animated_news_frame_enhanced(width, height, news_title, progress=0.5):
+    """
+    Enhanced animated frame with professional effects from video_animations module
+    """
+    # Create tech background with animated grid
+    base_img = va.create_tech_background(width, height, progress)
+    
+    # Convert to PIL for compositing
+    img = Image.fromarray(base_img.astype('uint8'), 'RGB')
+    
+    # Add animated text overlay
+    text_img = va.create_animated_text(
+        width, height, 
+        f"Story: {news_title}",
+        font_size=45, 
+        progress=progress, 
+        effect='slide'
+    )
+    img.paste(text_img, (0, 0), text_img)
+    
+    # Add animated shapes for visual interest
+    shapes_img = va.create_animated_shapes(
+        width, height, 
+        progress=progress, 
+        shape_type='circles'
+    )
+    img.paste(shapes_img, (0, 0), shapes_img)
+    
+    return np.array(img)
+
 def create_animated_news_frame(width, height, news_title, progress=0.5):
     """
     Create an animated frame for displaying news article.
@@ -318,7 +348,7 @@ def create_video_from_audio(
             for frame_num in range(num_frames):
                 progress = frame_num / (num_frames - 1) if num_frames > 1 else 0.5
                 
-                animated_frame = create_animated_news_frame(
+                animated_frame = create_animated_news_frame_enhanced(
                     width, height, 
                     "Story {}: {}".format(idx + 1, title),
                     progress=progress
