@@ -247,9 +247,7 @@ def main():
     parser.add_argument(
         '--skip-video',
         action='store_true',
-            use_enhanced=args.use_enhanced,
-            use_summarization=args.use_summarization
-        help='Skip video creation (use existing videos)'
+            help='Skip video creation (use existing videos)'
     )
     
     args = parser.parse_args()
