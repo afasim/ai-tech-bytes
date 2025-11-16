@@ -8,9 +8,13 @@ import os
 import json
 import requests
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure news sources
-NEWS_API_KEY = os.getenv('NEWS_API_KEY', '')  # Get from GitHub Secrets
+NEWS_API_KEY = os.getenv('NEWS_API_KEY', '')  # Get from .env or environment
 NEWS_API_URL = 'https://newsapi.org/v2/everything'
 
 def fetch_ai_news(num_articles=3):

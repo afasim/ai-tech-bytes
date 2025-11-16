@@ -9,6 +9,11 @@ import sys
 import argparse
 from datetime import datetime
 
+# Fix Unicode issues on Windows
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
 # Import modules
 from news_fetcher import fetch_ai_news, save_news_to_file
 from tts_generator import generate_audio_from_news
@@ -17,13 +22,8 @@ from video_maker import create_multiple_formats
 def print_banner():
     """Print application banner"""
     print("="*70)
-    print("  █████╗ ██╗    ████████╗███████╗ ██████╗██╗  ██╗")
-    print(" ██╔══██╗██║    ╚══██╔══╝██╔════╝██╔════╝██║  ██║")
-    print(" ███████║██║       ██║   █████╗  ██║     ███████║")
-    print(" ██╔══██║██║       ██║   ██╔══╝  ██║     ██╔══██║")
-    print(" ██║  ██║██║       ██║   ███████╗╚██████╗██║  ██║")
-    print(" ╚═╝  ╚═╝╚═╝       ╚═╝   ╚══════╝ ╚═════╝╚═╝  ╚═╝")
-    print("")
+    print("  AI Tech Bytes")
+    print("="*70)
     print("           BYTES - Automated Video Creator")
     print("="*70)
     print()
@@ -45,14 +45,14 @@ def run_pipeline(skip_news=False, skip_audio=False, skip_video=False):
             news_items = fetch_ai_news(num_articles=3)
             if news_items:
                 news_file = save_news_to_file(news_items)
-                print(f"✓ News fetched and saved: {news_file}")
+                print(f"[OK] News fetched and saved: {news_file}")
             else:
-                print("✗ No news items fetched. Using fallback.")
+                print("[WARNING] No news items fetched. Using fallback.")
         except Exception as e:
-            print(f"✗ Error fetching news: {e}")
+            print(f"[ERROR] Error fetching news: {e}")
             return False
     else:
-        print("\n⏩ Skipping news fetch (using existing data)")
+        print("\n[SKIP] Skipping news fetch (using existing data)")
     
     # Step 2: Generate TTS Audio
     if not skip_audio:
@@ -62,15 +62,15 @@ def run_pipeline(skip_news=False, skip_audio=False, skip_video=False):
         try:
             audio_file = generate_audio_from_news()
             if audio_file:
-                print(f"✓ Audio generated: {audio_file}")
+                print(f"[OK] Audio generated: {audio_file}")
             else:
-                print("✗ Audio generation failed")
+                print("[ERROR] Audio generation failed")
                 return False
         except Exception as e:
-            print(f"✗ Error generating audio: {e}")
+            print(f"[ERROR] Error generating audio: {e}")
             return False
     else:
-        print("\n⏩ Skipping audio generation (using existing audio)")
+        print("\n[SKIP] Skipping audio generation (using existing audio)")
     
     # Step 3: Create Videos
     if not skip_video:
@@ -80,31 +80,31 @@ def run_pipeline(skip_news=False, skip_audio=False, skip_video=False):
         try:
             videos = create_multiple_formats()
             if videos:
-                print(f"\n✓ Created {len(videos)} video(s)")
+                print(f"\n[OK] Created {len(videos)} video(s)")
                 for video in videos:
                     print(f"  - {video}")
             else:
-                print("✗ Video creation failed")
+                print("[ERROR] Video creation failed")
                 return False
         except Exception as e:
-            print(f"✗ Error creating videos: {e}")
+            print(f"[ERROR] Error creating videos: {e}")
             import traceback
             traceback.print_exc()
             return False
     else:
-        print("\n⏩ Skipping video creation (using existing videos)")
+        print("\n[SKIP] Skipping video creation (using existing videos)")
     
     # Step 4: Upload (placeholder for future implementation)
     print("\n" + "="*70)
     print("STEP 4: Upload to Social Media (Manual)")
     print("="*70)
-    print("ℹ️  YouTube/TikTok upload requires OAuth setup.")
-    print("ℹ️  Videos are ready in the 'output/' directory.")
-    print("ℹ️  Manual upload or configure YouTube Data API for automation.")
+    print("[INFO] YouTube/TikTok upload requires OAuth setup.")
+    print("[INFO] Videos are ready in the 'output/' directory.")
+    print("[INFO] Manual upload or configure YouTube Data API for automation.")
     
     # Summary
     print("\n" + "="*70)
-    print("✓ PIPELINE COMPLETED SUCCESSFULLY")
+    print("[OK] PIPELINE COMPLETED SUCCESSFULLY")
     print("="*70)
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Done!\n")
     
@@ -142,10 +142,10 @@ def main():
         sys.exit(0 if success else 1)
         
     except KeyboardInterrupt:
-        print("\n\n⚠️  Pipeline interrupted by user")
+        print("\n\n[WARNING] Pipeline interrupted by user")
         sys.exit(1)
     except Exception as e:
-        print(f"\n\n✗ Fatal error: {e}")
+        print(f"\n\n[ERROR] Fatal error: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

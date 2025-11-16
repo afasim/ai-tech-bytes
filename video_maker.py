@@ -2,15 +2,16 @@
 """
 Video Maker
 Creates short-form videos from audio and text for YouTube/TikTok
+Uses PIL for text rendering to avoid ImageMagick dependency
 """
 
 import os
 import json
+import numpy as np
+from PIL import Image, ImageDraw, ImageFont
 from moviepy.editor import (
-    AudioFileClip, TextClip, CompositeVideoClip, 
-    ColorClip, concatenate_videoclips
+    AudioFileClip, ImageClip, CompositeVideoClip, concatenate_videoclips
 )
-from moviepy.video.fx import fadein, fadeout
 
 # Video settings for social media
 VIDEO_SETTINGS = {
@@ -18,6 +19,46 @@ VIDEO_SETTINGS = {
     'tiktok': {'width': 1080, 'height': 1920, 'fps': 30},         # 9:16
     'youtube': {'width': 1920, 'height': 1080, 'fps': 30},        # 16:9
 }
+
+def get_font_path():
+    """Get available font for the system"""
+    if os.name == 'nt':  # Windows
+        return 'C:\\Windows\\Fonts\\arial.ttf'
+    else:  # macOS/Linux
+        return '/System/Library/Fonts/Arial.ttf'
+
+def create_frame_with_text(width, height, text, bg_color=(20, 20, 40), text_color='white', font_size=50):
+    """
+    Create a PIL Image with text overlay
+    """
+    img = Image.new('RGB', (width, height), color=bg_color)
+    draw = ImageDraw.Draw(img)
+    
+    # Try to load a system font
+    try:
+        font_path = get_font_path()
+        if os.path.exists(font_path):
+            font = ImageFont.truetype(font_path, font_size)
+        else:
+            font = ImageFont.load_default()
+    except Exception:
+        font = ImageFont.load_default()
+    
+    # Center text
+    bbox = draw.textbbox((0, 0), text, font=font)
+    text_width = bbox[2] - bbox[0]
+    text_height = bbox[3] - bbox[1]
+    
+    x = (width - text_width) // 2
+    y = (height - text_height) // 2
+    
+    # Draw text with shadow effect
+    shadow_offset = 2
+    draw.text((x + shadow_offset, y + shadow_offset), text, font=font, fill=(0, 0, 0, 128))
+    draw.text((x, y), text, font=font, fill=text_color)
+    
+    return np.array(img)
+
 
 def load_script(script_file='data/ai_news_audio_script.txt'):
     """
@@ -29,29 +70,13 @@ def load_script(script_file='data/ai_news_audio_script.txt'):
     except FileNotFoundError:
         return "AI Tech Bytes - Your daily AI news update!"
 
-def create_text_clip(text, duration, video_size=(1080, 1920)):
-    """
-    Create a text clip with styling
-    """
-    txt_clip = TextClip(
-        text,
-        fontsize=70,
-        color='white',
-        font='Arial-Bold',
-        size=video_size,
-        method='caption',
-        align='center'
-    ).set_duration(duration)
-    
-    return txt_clip
-
 def create_video_from_audio(
     audio_file='data/ai_news_audio.mp3',
     output_file='output/ai_tech_bytes.mp4',
     platform='youtube_shorts'
 ):
     """
-    Create a video with audio and text overlay
+    Create a video with audio and text overlay using PIL for text rendering
     """
     try:
         # Load audio
@@ -62,47 +87,39 @@ def create_video_from_audio(
         
         # Get video settings for platform
         settings = VIDEO_SETTINGS.get(platform, VIDEO_SETTINGS['youtube_shorts'])
-        video_size = (settings['width'], settings['height'])
+        width = settings['width']
+        height = settings['height']
+        fps = settings['fps']
         
-        # Create background
-        print("Creating video background...")
-        background = ColorClip(
-            size=video_size,
-            color=(20, 20, 40),  # Dark blue background
-            duration=duration
+        # Create title frame
+        title_text = "AI TECH BYTES"
+        subtitle_text = "Daily AI News Update"
+        
+        # Create opening frame with title
+        title_frame = create_frame_with_text(
+            width, height, 
+            f"{title_text}\n\n{subtitle_text}",
+            bg_color=(20, 20, 40),
+            text_color='cyan',
+            font_size=80
         )
         
-        # Create title
-        title_text = "AI TECH BYTES"
-        title_clip = TextClip(
-            title_text,
-            fontsize=90,
-            color='cyan',
-            font='Arial-Bold',
-            size=video_size,
-            method='caption',
-            align='center'
-        ).set_position(('center', 100)).set_duration(duration)
+        # Create closing frame
+        closing_text = "Thank you for watching!\nSubscribe for more AI news"
+        closing_frame = create_frame_with_text(
+            width, height,
+            closing_text,
+            bg_color=(30, 30, 50),
+            text_color='white',
+            font_size=60
+        )
         
-        # Create subtitle (static for now - could be made dynamic)
-        subtitle_text = "Daily AI News Update"
-        subtitle_clip = TextClip(
-            subtitle_text,
-            fontsize=50,
-            color='white',
-            font='Arial',
-            size=(video_size[0] - 100, None),
-            method='caption',
-            align='center'
-        ).set_position(('center', 'center')).set_duration(duration)
+        # Create clips
+        title_clip = ImageClip(title_frame).set_duration(2)
+        closing_clip = ImageClip(closing_frame).set_duration(2)
         
-        # Composite video
-        print("Compositing video layers...")
-        video = CompositeVideoClip([
-            background,
-            title_clip,
-            subtitle_clip
-        ])
+        # Composite video with title, background, and closing
+        video = concatenate_videoclips([title_clip, closing_clip])
         
         # Add audio
         video = video.set_audio(audio)
@@ -114,24 +131,26 @@ def create_video_from_audio(
         print(f"Writing video to {output_file}...")
         video.write_videofile(
             output_file,
-            fps=settings['fps'],
+            fps=fps,
             codec='libx264',
             audio_codec='aac',
             temp_audiofile='temp-audio.m4a',
             remove_temp=True,
             threads=4,
-            preset='medium'
+            preset='fast',
+            verbose=False,
+            logger=None
         )
         
-        print(f"\n✓ Video created successfully: {output_file}")
+        print(f"\n[OK] Video created successfully: {output_file}")
         print(f"  Duration: {duration:.2f}s")
-        print(f"  Resolution: {video_size[0]}x{video_size[1]}")
+        print(f"  Resolution: {width}x{height}")
         print(f"  Platform: {platform}")
         
         return output_file
         
     except Exception as e:
-        print(f"Error creating video: {e}")
+        print(f"[ERROR] Error creating video: {e}")
         import traceback
         traceback.print_exc()
         return None
@@ -168,9 +187,9 @@ if __name__ == "__main__":
     
     if videos:
         print(f"\n\n{'='*60}")
-        print(f"✓ Successfully created {len(videos)} video(s):")
+        print(f"[OK] Successfully created {len(videos)} video(s):")
         for video in videos:
             print(f"  - {video}")
         print(f"{'='*60}")
     else:
-        print("\n✗ No videos were created")
+        print("\n[ERROR] No videos were created")
