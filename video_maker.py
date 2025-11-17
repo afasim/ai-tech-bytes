@@ -329,12 +329,10 @@ def create_video_from_audio(
             font_size=80,
             add_decorations=True
         )
-        opening_clip = ImageClip(opening_frame).set_duration(3)
         
         # Calculate duration per article
         num_articles = len(news_items)
-        content_duration = duration - 3 - 2  # Minus opening and closing
-        duration_per_article = content_duration / num_articles if num_articles > 0 else content_duration
+    opening_clip = ImageClip(np.array(opening_frame)).set_duration(3)        duration_per_article = content_duration / num_articles if num_articles > 0 else content_duration
         
         # Create animated frames for each news article
         all_clips = [opening_clip]
@@ -354,12 +352,10 @@ def create_video_from_audio(
                     progress=progress
                 )
                 
-                frame_clip = ImageClip(animated_frame).set_duration(1.0 / fps * 10)
                 all_clips.append(frame_clip)
         
         # Create closing frame
-        closing_text = "Thank you for watching!\nSubscribe for more AI news"
-        closing_frame = create_frame_with_text(
+            frame_clip = ImageClip(np.array(animated_frame)).set_duration(1.0 / fps * 10)        closing_frame = create_frame_with_text(
             width, height,
             closing_text,
             bg_color=(30, 30, 50),
@@ -367,12 +363,10 @@ def create_video_from_audio(
             font_size=60,
             add_decorations=True
         )
-        closing_clip = ImageClip(closing_frame).set_duration(2)
         all_clips.append(closing_clip)
         
         # Composite all clips
-        print("Compositing video with {} clips...".format(len(all_clips)))
-        video = concatenate_videoclips(all_clips)
+    closing_clip = ImageClip(np.array(closing_frame)).set_duration(2)        video = concatenate_videoclips(all_clips)
         
         # Add audio
         video = video.set_audio(audio)
