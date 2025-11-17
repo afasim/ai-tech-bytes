@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+l#!/usr/bin/env python3
 """
 Video Maker
 Creates short-form videos from audio and text for YouTube/TikTok
@@ -327,7 +327,7 @@ def create_video_from_audio(
             bg_color=(20, 20, 40),
             text_color='cyan',
             font_size=80,
-            add_decorations=True
+            add_decorations=True)
         
         # Calculate duration per article
         num_articles = len(news_items)
