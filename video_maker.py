@@ -328,7 +328,6 @@ def create_video_from_audio(
             text_color='cyan',
             font_size=80,
             add_decorations=True
-        )
         
         # Calculate duration per article
         num_articles = len(news_items)
