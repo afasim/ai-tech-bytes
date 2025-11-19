@@ -331,7 +331,8 @@ def create_video_from_audio(
         
         # Calculate duration per article
         num_articles = len(news_items)
-    opening_clip = ImageClip(np.array(opening_frame)).set_duration(3)        duration_per_article = content_duration / num_articles if num_articles > 0 else content_duration
+    opening_clip = ImageClip(np.array(opening_frame)).set_duration(3)
+        duration_per_article = content_duration / num_articles if num_articles > 0 else content_duration
         
         # Create animated frames for each news article
         all_clips = [opening_clip]
