@@ -369,8 +369,8 @@ def create_video_from_audio(
         all_clips.append(closing_clip)
         
         # Composite all clips
-    closing_clip = ImageClip(np.array(closing_frame)).set_duration(2)        video = concatenate_videoclips(all_clips)
-        
+    closing_clip = ImageClip(np.array(closing_frame)).set_duration(2)
+    video = concatenate_videoclips(all_clips)        
         # Add audio
         video = video.set_audio(audio)
         
