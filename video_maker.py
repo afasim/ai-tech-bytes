@@ -332,6 +332,7 @@ def create_video_from_audio(
         # Calculate duration per article
         num_articles = len(news_items)
     opening_clip = ImageClip(np.array(opening_frame)).set_duration(3)
+            content_duration = duration - 5  # Subtract opening (3s) and closing (2s) durations
         duration_per_article = content_duration / num_articles if num_articles > 0 else content_duration
         
         # Create animated frames for each news article
@@ -355,7 +356,9 @@ def create_video_from_audio(
                 all_clips.append(frame_clip)
         
         # Create closing frame
-            frame_clip = ImageClip(np.array(animated_frame)).set_duration(1.0 / fps * 10)        closing_frame = create_frame_with_text(
+        frame_clip = ImageClip(np.array(animated_frame)).set_duration(1.0 / fps * 10)
+        closing_text = "Thanks for watching! Subscribe for daily AI news"
+        closing_frame = create_frame_with_text(
             width, height,
             closing_text,
             bg_color=(30, 30, 50),
