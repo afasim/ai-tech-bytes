@@ -352,11 +352,12 @@ def create_video_from_audio(
                     "Story {}: {}".format(idx + 1, title),
                     progress=progress
                 )
+
+            frame_clip = ImageClip(np.array(animated_frame)).set_duration(1.0 / fps * 10)
+            all_clips.append(frame_clip)
                 
-                all_clips.append(frame_clip)
         
         # Create closing frame
-        frame_clip = ImageClip(np.array(animated_frame)).set_duration(1.0 / fps * 10)
         closing_text = "Thanks for watching! Subscribe for daily AI news"
         closing_frame = create_frame_with_text(
             width, height,
@@ -366,10 +367,10 @@ def create_video_from_audio(
             font_size=60,
             add_decorations=True
         )
-        all_clips.append(closing_clip)
         
         # Composite all clips
     closing_clip = ImageClip(np.array(closing_frame)).set_duration(2)
+    all_clips.append(closing_clip)
     video = concatenate_videoclips(all_clips)        
         # Add audio
         video = video.set_audio(audio)
