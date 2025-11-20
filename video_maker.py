@@ -345,17 +345,17 @@ title = news_item.get('title', 'AI News')
 num_frames = max(int(duration_per_article * fps / 10), 3)  # Create frame every 1/10th second
 
 for frame_num in range(num_frames):
-    progress = frame_num / (num_frames - 1) if num_frames > 1 else 0.5
-    
-    animated_frame = create_animated_news_frame_enhanced(
-        width, height, 
-        "Story {}: {}".format(idx + 1, title),
-        progress=progress
-    )
+progress = frame_num / (num_frames - 1) if num_frames > 1 else 0.5
+
+animated_frame = create_animated_news_frame_enhanced(
+    width, height, 
+    "Story {}: {}".format(idx + 1, title),
+    progress=progress
+)
 
 frame_clip = ImageClip(np.array(animated_frame)).set_duration(1.0 / fps * 10)
 all_clips.append(frame_clip)
-    
+
 
 # Create closing frame
 closing_text = "Thanks for watching! Subscribe for daily AI news"
