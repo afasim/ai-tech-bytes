@@ -322,50 +322,50 @@ print("Creating animated visual frames for {} news items...".format(len(news_ite
 title_text = "AI TECH BYTES"
 subtitle_text = "Daily AI News Update"
 opening_frame = create_frame_with_text(
-    width, height, 
-    "{}\n\n{}".format(title_text, subtitle_text),
-    bg_color=(20, 20, 40),
-    text_color='cyan',
-    font_size=80,
-    add_decorations=True)
+width, height, 
+"{}\n\n{}".format(title_text, subtitle_text),
+bg_color=(20, 20, 40),
+text_color='cyan',
+font_size=80,
+add_decorations=True)
 
 # Calculate duration per article
 num_articles = len(news_items)
-    opening_clip = ImageClip(np.array(opening_frame)).set_duration(3)
-    content_duration = duration - 5  # Subtract opening (3s) and closing (2s) durations
+opening_clip = ImageClip(np.array(opening_frame)).set_duration(3)
+content_duration = duration - 5  # Subtract opening (3s) and closing (2s) durations
 duration_per_article = content_duration / num_articles if num_articles > 0 else content_duration
 
 # Create animated frames for each news article
 all_clips = [opening_clip]
 
 for idx, news_item in enumerate(news_items):
-    title = news_item.get('title', 'AI News')
-    
-    # Create multiple frames with animation for this article
-    num_frames = max(int(duration_per_article * fps / 10), 3)  # Create frame every 1/10th second
-    
-    for frame_num in range(num_frames):
-        progress = frame_num / (num_frames - 1) if num_frames > 1 else 0.5
-        
-        animated_frame = create_animated_news_frame_enhanced(
-            width, height, 
-            "Story {}: {}".format(idx + 1, title),
-            progress=progress
-        )
+title = news_item.get('title', 'AI News')
 
-    frame_clip = ImageClip(np.array(animated_frame)).set_duration(1.0 / fps * 10)
-    all_clips.append(frame_clip)
-        
+# Create multiple frames with animation for this article
+num_frames = max(int(duration_per_article * fps / 10), 3)  # Create frame every 1/10th second
+
+for frame_num in range(num_frames):
+    progress = frame_num / (num_frames - 1) if num_frames > 1 else 0.5
+    
+    animated_frame = create_animated_news_frame_enhanced(
+        width, height, 
+        "Story {}: {}".format(idx + 1, title),
+        progress=progress
+    )
+
+frame_clip = ImageClip(np.array(animated_frame)).set_duration(1.0 / fps * 10)
+all_clips.append(frame_clip)
+    
 
 # Create closing frame
 closing_text = "Thanks for watching! Subscribe for daily AI news"
 closing_frame = create_frame_with_text(
-    width, height,
-    closing_text,
-    bg_color=(30, 30, 50),
-    text_color='white',
-    font_size=60,
-    add_decorations=True
+width, height,
+closing_text,
+bg_color=(30, 30, 50),
+text_color='white',
+font_size=60,
+add_decorations=True
 )
 
 # Composite all clips
@@ -381,16 +381,16 @@ os.makedirs(os.path.dirname(output_file), exist_ok=True)
 # Write video file
 print("Writing video to {}...".format(output_file))
 video.write_videofile(
-    output_file,
-    fps=fps,
-    codec='libx264',
-    audio_codec='aac',
-    temp_audiofile='temp-audio.m4a',
-    remove_temp=True,
-    threads=4,
-    preset='fast',
-    verbose=False,
-    logger=None
+output_file,
+fps=fps,
+codec='libx264',
+audio_codec='aac',
+temp_audiofile='temp-audio.m4a',
+remove_temp=True,
+threads=4,
+preset='fast',
+verbose=False,
+logger=None
 )
 
 print("\n[OK] Video created successfully: {}".format(output_file))
