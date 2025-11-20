@@ -348,9 +348,9 @@ for frame_num in range(num_frames):
 progress = frame_num / (num_frames - 1) if num_frames > 1 else 0.5
 
 animated_frame = create_animated_news_frame_enhanced(
-    width, height, 
-    "Story {}: {}".format(idx + 1, title),
-    progress=progress
+width, height, 
+"Story {}: {}".format(idx + 1, title),
+progress=progress
 )
 
 frame_clip = ImageClip(np.array(animated_frame)).set_duration(1.0 / fps * 10)
