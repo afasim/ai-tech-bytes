@@ -311,8 +311,8 @@ def create_video_from_audio(
             news_items = []
         
 # Get video settings for platform
-ings = VIDEO_SETTINGS.get(platform, VIDEO_SETTINGS['youtube_shorts'])
-width = settings['width']
+    settings = VIDEO_SETTINGS.get(platform, VIDEO_SETTINGS['youtube_shorts'])width = settings['width']
+        width = settings['width']
 height = settings['height']
 fps = settings['fps']
 
