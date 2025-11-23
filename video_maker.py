@@ -301,7 +301,10 @@ def create_video_from_audio(
         audio = AudioFileClip(audio_file)
         duration = audio.duration
         print("Audio duration: {:.2f} seconds".format(duration))
-        
+    except Exception as e:
+        print(f"Error: {e}")
+        pass
+       
         # Load news items to display
         try:
             with open('data/today_news.json', 'r', encoding='utf-8') as f:
@@ -339,13 +342,13 @@ duration_per_article = content_duration / num_articles if num_articles > 0 else 
 all_clips = [opening_clip]
 
 for idx, news_item in enumerate(news_items):
-title = news_item.get('title', 'AI News')
+    title = news_item.get('title', 'AI News')
 
 # Create multiple frames with animation for this article
 num_frames = max(int(duration_per_article * fps / 10), 3)  # Create frame every 1/10th second
 
 for frame_num in range(num_frames):
-progress = frame_num / (num_frames - 1) if num_frames > 1 else 0.5
+    progress = frame_num / (num_frames - 1) if num_frames > 1 else 0.5
 
 animated_frame = create_animated_news_frame_enhanced(
 width, height, 
@@ -398,10 +401,11 @@ print("  Duration: {:.2f}s".format(duration))
 print("  Resolution: {}x{}".format(width, height))
 print("  Platform: {}".format(platform))
 
-return output_file
+        return output_file  # ← 8 spaces (inside try block)
+
 
 except Exception as e:
-print("[ERROR] Error creating video: {}".format(e))
+  print("[ERROR] Error creating video: {}".format(e))
         import traceback
         traceback.print_exc()
         return None
