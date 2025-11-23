@@ -2,7 +2,6 @@ name: Daily AI Tech Bytes Video Generation
 
 on:
   schedule:
-    # Run daily at 8 AM UTC (3 AM EST, 12 AM PST)
     - cron: '0 8 * * *'
   
   # Allow manual trigger
