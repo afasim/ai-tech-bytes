@@ -401,10 +401,10 @@ print("  Duration: {:.2f}s".format(duration))
 print("  Resolution: {}x{}".format(width, height))
 print("  Platform: {}".format(platform))
 
-        return output_file  # ← 8 spaces (inside try block)
+            return output_file
 
 
-except Exception as e:
+    except Exception as e:
   print("[ERROR] Error creating video: {}".format(e))
         import traceback
         traceback.print_exc()
