@@ -400,12 +400,10 @@ print("\n[OK] Video created successfully: {}".format(output_file))
 print("  Duration: {:.2f}s".format(duration))
 print("  Resolution: {}x{}".format(width, height))
 print("  Platform: {}".format(platform))
-
-            return output_file
-
+return output_file
 
     except Exception as e:
-  print("[ERROR] Error creating video: {}".format(e))
+        print("[ERROR] Error creating video: {}".format(e))
         import traceback
         traceback.print_exc()
         return None
