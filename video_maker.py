@@ -12,297 +12,101 @@ from PIL import Image, ImageDraw, ImageFont
 from moviepy.editor import (
     AudioFileClip, ImageClip, CompositeVideoClip, concatenate_videoclips
 )
-# Note: This module is not provided, so functions relying on it will fail.
-# I have modified the code to use the non-enhanced function defined below.
-# import video_animations as va 
+import librosa # <-- Import librosa
+import video_animations as va # <-- Import your animations file
 
 # Video settings for social media
 VIDEO_SETTINGS = {
     'youtube_shorts': {'width': 1080, 'height': 1920, 'fps': 30},  # 9:16
-    'tiktok': {'width': 1080, 'height': 1920, 'fps': 30},         # 9:16
-    'youtube': {'width': 1920, 'height': 1080, 'fps': 30},        # 16:9
+    'tiktok': {'width': 1080, 'height': 1920, 'fps': 30},          # 9:16
+    'youtube': {'width': 1920, 'height': 1080, 'fps': 30},         # 16:9
 }
 
-def get_font_path():
-    """Get available font for the system"""
-    if os.name == 'nt':  # Windows
-        return 'C:\\Windows\\Fonts\\arial.ttf'
-    else:  # macOS/Linux
-        # A more common path for Linux/macOS
-        font_paths = [
-            '/System/Library/Fonts/Arial.ttf', # macOS
-            '/System/Library/Fonts/Supplemental/Arial.ttf', # macOS
-            '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf', # Linux
-            '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', # Linux
-            'arial.ttf' # Fallback
-        ]
-        for path in font_paths:
-            if os.path.exists(path):
-                return path
-        return None # Let PIL use default
-
-def create_animated_gradient(width, height, color1=(20, 20, 40), color2=(40, 40, 80)):
-    """Create a gradient background"""
-    img = Image.new('RGB', (width, height))
-    pixels = img.load()
-    
-    for y in range(height):
-        # Interpolate between two colors
-        r = int(color1[0] + (color2[0] - color1[0]) * y / height)
-        g = int(color1[1] + (color2[1] - color1[1]) * y / height)
-        b = int(color1[2] + (color2[2] - color1[2]) * y / height)
-        
-        for x in range(width):
-            pixels[x, y] = (r, g, b)
-    
-    return np.array(img)
-
-def create_frame_with_text(width, height, text, bg_color=(20, 20, 40), text_color='white', font_size=50, add_decorations=True):
-    """
-    Create a PIL Image with text overlay and visual decorations
-    """
+# This function is now a helper, we will call the enhanced one
+def create_frame_with_text(width, height, text, bg_color=(20, 20, 40), text_color='white', font_size=50):
     img = Image.new('RGB', (width, height), color=bg_color)
     draw = ImageDraw.Draw(img)
-    
-    # Add decorative elements
-    if add_decorations:
-        # Top accent line
-        draw.rectangle([(0, 0), (width, 10)], fill=(0, 150, 255))
-        # Bottom accent line
-        draw.rectangle([(0, height-10), (width, height)], fill=(0, 150, 255))
-        # Side accents
-        draw.rectangle([(0, 0), (10, height)], fill=(100, 100, 200))
-        draw.rectangle([(width-10, 0), (width, height)], fill=(100, 100, 200))
-    
-    # Try to load a system font
     try:
-        font_path = get_font_path()
-        if font_path and os.path.exists(font_path):
+        font_path = va.get_font_path()
+        if font_path:
             font = ImageFont.truetype(font_path, font_size)
         else:
-            print("Warning: Arial font not found. Using default font.")
             font = ImageFont.load_default()
     except Exception:
-        print("Warning: Error loading font. Using default font.")
         font = ImageFont.load_default()
     
-    # Center text
-    bbox = draw.textbbox((0, 0), text, font=font)
+    bbox = draw.textbbox((0, 0), text, font=font, align="center")
     text_width = bbox[2] - bbox[0]
     text_height = bbox[3] - bbox[1]
-    
     x = (width - text_width) // 2
     y = (height - text_height) // 2
     
-    # Draw text with shadow effect
-    shadow_offset = 2
-    draw.text((x + shadow_offset, y + shadow_offset), text, font=font, fill=(0, 0, 0, 128))
-    draw.text((x, y), text, font=font, fill=text_color)
-    
+    draw.text((x, y), text, font=font, fill=text_color, align="center")
     return np.array(img)
 
-def create_ai_icon_frame(width, height, text=""):
-    """Create a frame with AI-themed visual elements"""
-    img = Image.new('RGB', (width, height), color=(15, 15, 35))
-    draw = ImageDraw.Draw(img, 'RGBA')
-    
-    # Draw circular elements (representing AI/neural networks)
-    center_x, center_y = width // 2, height // 2
-    colors = [(0, 150, 255), (100, 200, 255), (150, 100, 255), (200, 100, 255)]
-    
-    # Draw concentric circles
-    for i, color in enumerate(colors):
-        radius = 200 - (i * 40)
-        if radius > 0:
-            bbox = [center_x - radius, center_y - radius, center_x + radius, center_y + radius]
-            draw.ellipse(bbox, outline=color, width=3)
-    
-    # Draw connecting nodes
-    node_positions = [
-        (center_x - 150, center_y - 150),
-        (center_x + 150, center_y - 150),
-        (center_x - 150, center_y + 150),
-        (center_x + 150, center_y + 150),
-        (center_x, center_y)
-    ]
-    
-    for pos in node_positions:
-        draw.ellipse(
-            [pos[0] - 20, pos[1] - 20, pos[0] + 20, pos[1] + 20],
-            fill=(0, 200, 255)
-        )
-    
-    # Draw connecting lines
-    for i in range(len(node_positions) - 1):
-        draw.line([node_positions[i], node_positions[-1]], fill=(0, 150, 255), width=2)
-    
-    # Add text if provided
-    if text:
-        try:
-            font_path = get_font_path()
-            if font_path and os.path.exists(font_path):
-                font = ImageFont.truetype(font_path, 60)
-            else:
-                font = ImageFont.load_default()
-        except Exception:
-            font = ImageFont.load_default()
-        
-        bbox = draw.textbbox((0, 0), text, font=font)
-        text_width = bbox[2] - bbox[0]
-        x = (width - text_width) // 2
-        y = height - 150
-        
-        draw.text((x, y), text, font=font, fill=(0, 200, 255))
-    
-    return np.array(img)
 
-# This function relies on the missing 'video_animations' module.
-# def create_animated_news_frame_enhanced(width, height, news_title, progress=0.5):
-#     """
-#     Enhanced animated frame with professional effects from video_animations module
-#     """
-#     # Create tech background with animated grid
-#     base_img = va.create_tech_background(width, height, progress)
-#     
-#     # Convert to PIL for compositing
-#     img = Image.fromarray(base_img.astype('uint8'), 'RGB')
-#     
-#     # Add animated text overlay
-#     text_img = va.create_animated_text(
-#         width, height, 
-#         f"Story: {news_title}",
-#         font_size=45, 
-#         progress=progress, 
-#         effect='slide'
-#     )
-#     img.paste(text_img, (0, 0), text_img)
-#     
-#     # Add animated shapes for visual interest
-#     shapes_img = va.create_animated_shapes(
-#         width, height, 
-#         progress=progress, 
-#         shape_type='circles'
-#     )
-#     img.paste(shapes_img, (0, 0), shapes_img)
-#     
-#     return np.array(img)
+def create_animated_scene(width, height, particle_system, text, text_effect='pulse', shape='circles', progress=0.0, audio_level=0.0):
+    """
+    Creates a single, fully composited frame for intro/outro.
+    This combines background, particles, shapes, and text.
+    """
+    # 1. Create animated background
+    base_img = va.create_tech_background(width, height, progress, audio_level)
+    
+    # 2. Update and draw particle system
+    particle_system.update(audio_level)
+    draw = ImageDraw.Draw(base_img, 'RGBA')
+    particle_system.draw(draw)
+    
+    # 3. Create and composite animated shapes
+    shapes_img = va.create_animated_shapes(width, height, progress, shape, audio_level)
+    base_img.paste(shapes_img, (0, 0), shapes_img) # Paste with alpha
+    
+    # 4. Create and composite animated text
+    font_size = 80 if width < 1200 else 100 # Larger font for title
+    text_img = va.create_animated_text(width, height, text, font_size, progress, text_effect, audio_level)
+    base_img.paste(text_img, (0, 0), text_img) # Paste with alpha
+    
+    return np.array(base_img)
 
-def create_animated_news_frame(width, height, news_title, progress=0.5):
+def create_animated_news_frame_enhanced(width, height, particle_system, news_title, progress=0.0, audio_level=0.0):
     """
-    Create an animated frame for displaying news article.
-    progress: 0.0 to 1.0 indicating how far through this article we are
+    Enhanced animated frame with professional effects from video_animations module
     """
-    img = Image.new('RGB', (width, height), color=(20, 20, 50))
-    draw = ImageDraw.Draw(img, 'RGBA')
+    # 1. Create tech background
+    base_img = va.create_tech_background(width, height, progress, audio_level)
     
-    # Create animated background with gradient based on progress
-    color_start = (20, 20, 50)
-    color_mid = (40, 60, 100)
-    color_end = (60, 100, 150)
+    # 2. Update and draw particle system
+    particle_system.update(audio_level)
+    draw = ImageDraw.Draw(base_img, 'RGBA')
+    particle_system.draw(draw)
     
-    # Interpolate color based on progress
-    if progress < 0.5:
-        ratio = progress * 2
-        r = int(color_start[0] + (color_mid[0] - color_start[0]) * ratio)
-        g = int(color_start[1] + (color_mid[1] - color_start[1]) * ratio)
-        b = int(color_start[2] + (color_mid[2] - color_start[2]) * ratio)
-    else:
-        ratio = (progress - 0.5) * 2
-        r = int(color_mid[0] + (color_end[0] - color_mid[0]) * ratio)
-        g = int(color_mid[1] + (color_end[1] - color_mid[1]) * ratio)
-        b = int(color_mid[2] + (color_end[2] - color_mid[2]) * ratio)
+    # 3. Add animated shapes for visual interest
+    shapes_img = va.create_animated_shapes(width, height, progress, 'hexagon', audio_level)
+    base_img.paste(shapes_img, (0, 0), shapes_img)
     
-    bg_color = (r, g, b)
+    # 4. Add animated text overlay (wrapped)
+    font_size = 45 if width < 1200 else 60
     
-    # Fill background
-    draw.rectangle([(0, 0), (width, height)], fill=bg_color)
-    
-    # Draw animated accent bar
-    accent_height = 5
-    accent_width = int(width * progress)
-    draw.rectangle([(0, 0), (accent_width, accent_height)], fill=(0, 200, 255))
-    
-    # Draw animated circles (pulse effect based on progress)
-    center_x, center_y = width // 2, height // 3
-    pulse_radius = int(50 + 30 * np.sin(progress * np.pi))
-    draw.ellipse(
-        [center_x - pulse_radius, center_y - pulse_radius, 
-         center_x + pulse_radius, center_y + pulse_radius],
-        outline=(0, 200, 255),
-        width=3
-    )
-    
-    # Draw multiple pulsing rings
-    for i in range(2):
-        ring_radius = int(80 + 40 * np.sin(progress * np.pi - i * 0.5))
-        if ring_radius > 0:
-            draw.ellipse(
-                [center_x - ring_radius, center_y - ring_radius,
-                 center_x + ring_radius, center_y + ring_radius],
-                outline=(100, 150, 255),
-                width=2
-            )
-    
-    # Draw animated bars (moving left to right)
-    bar_height = 20
-    bar_y = height // 2
-    for i in range(5):
-        bar_x = int((progress * width + i * width / 5) % width)
-        draw.rectangle([(bar_x, bar_y), (bar_x + 100, bar_y + bar_height)], 
-                       fill=(0, 150, 200))
-    
-    # Add news title with word wrapping
-    try:
-        font_path = get_font_path()
-        if font_path and os.path.exists(font_path):
-            title_font = ImageFont.truetype(font_path, 50)
-            text_font = ImageFont.truetype(font_path, 35)
+    # Simple word wrapping
+    max_chars = 40
+    words = news_title.split()
+    lines = []
+    current_line = ""
+    for word in words:
+        if len(current_line) + len(word) + 1 <= max_chars:
+            current_line += word + " "
         else:
-            title_font = ImageFont.load_default()
-            text_font = ImageFont.load_default()
-    except Exception:
-        title_font = ImageFont.load_default()
-        text_font = ImageFont.load_default()
+            lines.append(current_line.strip())
+            current_line = word + " "
+    lines.append(current_line.strip())
+    wrapped_text = "\n".join(lines[:3]) # Max 3 lines
     
-    # Wrap title text if too long
-    title = "BREAKING NEWS"
-    bbox = draw.textbbox((0, 0), title, font=title_font)
-    title_width = bbox[2] - bbox[0]
-    title_x = (width - title_width) // 2
-    draw.text((title_x, height * 0.6), title, font=title_font, fill=(0, 255, 200))
+    text_img = va.create_animated_text(width, height, wrapped_text, font_size, progress, 'slide', audio_level)
+    base_img.paste(text_img, (0, 0), text_img)
     
-    # Wrap and display news article title
-    max_chars = 40 if width < 1200 else 50
-    if len(news_title) > max_chars:
-        words = news_title.split()
-        lines = []
-        current_line = ""
-        for word in words:
-            if len(current_line) + len(word) + 1 <= max_chars:
-                current_line += word + " "
-            else:
-                lines.append(current_line.strip())
-                current_line = word + " "
-        lines.append(current_line.strip())
-        news_text = "\n".join(lines[:3])  # Max 3 lines
-    else:
-        news_text = news_title
-    
-    news_y = height * 0.75
-    draw.text((40, int(news_y)), news_text, font=text_font, fill=(200, 200, 255))
-    
-    return np.array(img)
+    return np.array(base_img)
 
-
-def load_script(script_file='data/ai_news_audio_script.txt'):
-    """
-    Load the generated script
-    """
-    try:
-        with open(script_file, 'r', encoding='utf-8') as f:
-            return f.read()
-    except FileNotFoundError:
-        return "AI Tech Bytes - Your daily AI news update!"
 
 def create_video_from_audio(
     audio_file='data/ai_news_audio.mp3',
@@ -312,137 +116,137 @@ def create_video_from_audio(
     """
     Create a video with audio and animated news frames that change per article
     """
-    # This is the main fix: The entire function's logic needs to be
-    # inside ONE try...except block.
     try:
-        # Load audio and news data
+        # Load audio and get settings
         print("Loading audio file...")
         audio = AudioFileClip(audio_file)
         duration = audio.duration
-        print("Audio duration: {:.2f} seconds".format(duration))
+        print(f"Audio duration: {duration:.2f} seconds")
         
-        # Load news items to display
-        news_items = [] # Default
+        settings = VIDEO_SETTINGS.get(platform, VIDEO_SETTINGS['youtube_shorts'])
+        width, height, fps = settings['width'], settings['height'], settings['fps']
+
+        # --- AUDIO ANALYSIS (NEW) ---
+        print("Analyzing audio with Librosa...")
+        y, sr = librosa.load(audio_file, sr=None)
+        # Get Root-Mean-Square (RMS) energy, a good proxy for volume
+        rms = librosa.feature.rms(y=y)[0]
+        # Normalize RMS to be between 0.0 and 1.0
+        rms_normalized = (rms - np.min(rms)) / (np.max(rms) - np.min(rms) + 1e-6)
+        
+        # Interpolate audio data to match the number of video frames
+        total_video_frames = int(duration * fps)
+        # Create an array of frame indices [0, 1, 2, ..., total_video_frames-1]
+        video_frame_indices = np.arange(total_video_frames)
+        # Create an array of audio sample indices
+        audio_sample_indices = np.linspace(0, len(rms_normalized) - 1, total_video_frames)
+        # Interpolate: Map audio data to video frames
+        amplitude_frames = np.interp(video_frame_indices, np.arange(len(rms_normalized)), rms_normalized)
+        print(f"Analyzed audio and mapped to {len(amplitude_frames)} video frames.")
+        # --- END OF AUDIO ANALYSIS ---
+
+        # Load news items
+        news_items = []
         try:
             with open('data/today_news.json', 'r', encoding='utf-8') as f:
                 news_data = json.load(f)
                 news_items = news_data.get('articles', [])
         except Exception as e:
-            print(f"Warning: Could not load news data. Using empty list. Error: {e}")
-            news_items = []
+            print(f"Warning: Could not load news data. Using default. Error: {e}")
         
-        # Get video settings for platform
-        settings = VIDEO_SETTINGS.get(platform, VIDEO_SETTINGS['youtube_shorts'])
-        width = settings['width']
-        # FIX: These lines were unindented
-        height = settings['height']
-        fps = settings['fps']
+        if not news_items:
+            news_items = [{'title': 'Thanks for tuning in! No news items found.'}]
 
-        print("Creating animated visual frames for {} news items...".format(len(news_items)))
+        # Durations
+        intro_duration = 3.0
+        outro_duration = 3.0
+        content_duration = duration - intro_duration - outro_duration
+        
+        if content_duration < 0:
+            print("Warning: Audio is very short. Adjusting scene durations.")
+            intro_duration = min(1.0, duration * 0.4)
+            outro_duration = min(1.0, duration * 0.4)
+            content_duration = duration - intro_duration - outro_duration
+            if content_duration < 0: content_duration = 0
 
-        # Create opening frame
-        title_text = "AI TECH BYTES"
-        subtitle_text = "Daily AI News Update"
-        opening_frame = create_frame_with_text(
-            width, height, 
-            "{}\n\n{}".format(title_text, subtitle_text),
-            bg_color=(20, 20, 40),
-            text_color='cyan',
-            font_size=80,
-            add_decorations=True
-        )
-        opening_clip = ImageClip(np.array(opening_frame)).set_duration(3)
-
-        # Calculate duration per article
         num_articles = len(news_items)
-        content_duration = duration - 5  # Subtract opening (3s) and closing (2s) durations
+        duration_per_article = content_duration / num_articles if num_articles > 0 else 0
+
+        # --- FRAME GENERATION LOOP (REFACTORED) ---
+        print("Creating animated visual frames...")
+        all_clips = []
+        frame_counter = 0 # Global frame counter
         
-        if num_articles > 0:
-            duration_per_article = content_duration / num_articles
-        else:
-            # Handle case with no news items
-            duration_per_article = content_duration 
-            if duration_per_article < 0:
-                duration_per_article = 0
-            news_items = [{'title': 'Thanks for tuning in!'}] # Add a default item
+        # Initialize Particle System
+        particle_sys = va.ParticleSystem(width, height, num_particles=100)
         
-        if content_duration <= 0:
-             print("Warning: Audio duration is too short for intro/outro. Clips may overlap.")
-             # Adjust durations if audio is very short
-             opening_clip = opening_clip.set_duration(min(1, duration * 0.5))
-             content_duration = duration - min(1, duration * 0.5)
-             duration_per_article = content_duration / num_articles if num_articles > 0 else content_duration
+        # 1. Create Intro Frames
+        intro_frames = int(intro_duration * fps)
+        for i in range(intro_frames):
+            if frame_counter >= total_video_frames: break
+            progress = i / (intro_frames - 1) if intro_frames > 1 else 0
+            audio_level = amplitude_frames[frame_counter]
+            
+            frame = create_animated_scene(
+                width, height, particle_sys, 
+                "AI TECH BYTES\nDaily News Update", 
+                text_effect='zoom', shape='lines',
+                progress=progress, audio_level=audio_level
+            )
+            all_clips.append(ImageClip(frame).set_duration(1.0 / fps))
+            frame_counter += 1
 
-
-        # Create animated frames for each news article
-        all_clips = [opening_clip]
-
+        # 2. Create News Article Frames
         for idx, news_item in enumerate(news_items):
             title = news_item.get('title', 'AI News')
-
-            # Create multiple frames with animation for this article
-            # Calculate frames needed for this specific article's duration
             num_frames_for_article = int(duration_per_article * fps)
             
-            # Ensure at least 1 frame
-            if num_frames_for_article <= 0:
-                num_frames_for_article = 1
-
-            for frame_num in range(num_frames_for_article):
-                # FIX: This whole block was unindented, causing an error
-                # It needs to be INSIDE the for loop
-                progress = frame_num / (num_frames_for_article - 1) if num_frames_for_article > 1 else 0.5
-
-                # LOGIC FIX: Changed to use the function *defined in this file*
-                # `create_animated_news_frame_enhanced` would fail because
-                # the `video_animations` module is not available.
-                animated_frame = create_animated_news_frame(
-                    width, height, 
-                    "Story {}: {}".format(idx + 1, title),
-                    progress=progress
+            for i in range(num_frames_for_article):
+                if frame_counter >= total_video_frames: break
+                progress = i / (num_frames_for_article - 1) if num_frames_for_article > 1 else 0
+                audio_level = amplitude_frames[frame_counter]
+                
+                frame = create_animated_news_frame_enhanced(
+                    width, height, particle_sys,
+                    f"Story {idx + 1}: {title}",
+                    progress=progress,
+                    audio_level=audio_level
                 )
+                all_clips.append(ImageClip(frame).set_duration(1.0 / fps))
+                frame_counter += 1
 
-                frame_clip = ImageClip(np.array(animated_frame)).set_duration(1.0 / fps)
-                all_clips.append(frame_clip)
+        # 3. Create Outro Frames
+        # Fill remaining time with outro
+        outro_frames = total_video_frames - frame_counter
+        for i in range(outro_frames):
+            if frame_counter >= total_video_frames: break
+            progress = i / (outro_frames - 1) if outro_frames > 1 else 0
+            audio_level = amplitude_frames[frame_counter]
+            
+            frame = create_animated_scene(
+                width, height, particle_sys,
+                "Thanks for watching!\nSubscribe for more.",
+                text_effect='fade', shape='circles',
+                progress=progress, audio_level=audio_level
+            )
+            all_clips.append(ImageClip(frame).set_duration(1.0 / fps))
+            frame_counter += 1
 
-
-        # Create closing frame
-        closing_text = "Thanks for watching! Subscribe for daily AI news"
-        closing_frame = create_frame_with_text(
-            width, height,
-            closing_text,
-            bg_color=(30, 30, 50),
-            text_color='white',
-            font_size=60,
-            add_decorations=True
-        )
-        
-        # Adjust closing clip duration if needed to match audio
-        total_content_duration = sum(c.duration for c in all_clips)
-        closing_duration = max(0, duration - total_content_duration)
-        if closing_duration == 0 and total_content_duration > duration:
-            # If content is already too long, trim it
-            all_clips = all_clips[:int(duration * fps)] # Keep only clips that fit
-            closing_clip = ImageClip(np.array(closing_frame)).set_duration(0) # No time for closing
-        else:
-             closing_clip = ImageClip(np.array(closing_frame)).set_duration(closing_duration)
-        
-        all_clips.append(closing_clip)
+        print(f"Generated {len(all_clips)} total frames.")
+        # --- END OF FRAME GENERATION ---
 
         # Composite all clips
         video = concatenate_videoclips(all_clips)
         
-        # Ensure video duration exactly matches audio to prevent errors
+        # Ensure video duration exactly matches audio
         video = video.set_duration(duration)
-        
-        # Add audio
         video = video.set_audio(audio)
 
         # Create output directory
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
         # Write video file
-        print("Writing video to {}...".format(output_file))
+        print(f"Writing video to {output_file}...")
         video.write_videofile(
             output_file,
             fps=fps,
@@ -451,21 +255,14 @@ def create_video_from_audio(
             temp_audiofile='temp-audio.m4a',
             remove_temp=True,
             threads=4,
-            preset='fast',
-            verbose=False,
-            logger=None
+            preset='fast'
         )
 
-        print("\n[OK] Video created successfully: {}".format(output_file))
-        print("  Duration: {:.2f}s".format(duration))
-        print("  Resolution: {}x{}".format(width, height))
-        print("  Platform: {}".format(platform))
+        print(f"\n[OK] Video created successfully: {output_file}")
         return output_file
 
-    # This is the single 'except' block that catches errors
-    # from the 'try' block at the top of the function.
     except Exception as e:
-        print("[ERROR] Error creating video: {}".format(e))
+        print(f"[ERROR] Error creating video: {e}")
         import traceback
         traceback.print_exc()
         return None
@@ -496,6 +293,23 @@ def create_multiple_formats(audio_file='data/ai_news_audio.mp3'):
 
 if __name__ == "__main__":
     print("=== AI Tech Bytes - Video Maker ===")
+    
+    # Ensure data/output dirs exist
+    os.makedirs('data', exist_ok=True)
+    os.makedirs('output', exist_ok=True)
+    
+    # Check for dummy audio/news if they don't exist (for testing)
+    if not os.path.exists('data/ai_news_audio.mp3'):
+        print("Warning: 'data/ai_news_audio.mp3' not found. Please generate it first.")
+        # As a fallback, we could try to create a dummy, but for now we'll just exit
+        exit()
+        
+    if not os.path.exists('data/today_news.json'):
+         print("Warning: 'data/today_news.json' not found. Creating dummy file.")
+         dummy_news = {"articles": [{"title": "Dummy News: AI Takes Over"}, {"title": "Another Story: Python is Great"}]}
+         with open('data/today_news.json', 'w') as f:
+             json.dump(dummy_news, f)
+
     print("\nCreating videos for multiple platforms...\n")
     
     videos = create_multiple_formats()
