@@ -9,6 +9,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import math
 import random
+import os # Make sure os is imported
 
 class ParticleSystem:
     """Dynamic particle system for animated backgrounds"""
@@ -21,18 +22,20 @@ class ParticleSystem:
             self.particles.append({
                 'x': random.uniform(0, width),
                 'y': random.uniform(0, height),
-                'vx': random.uniform(-2, 2),
-                'vy': random.uniform(-2, 2),
-                'size': random.randint(2, 8),
-                'color': (random.randint(100, 255), random.randint(100, 255), 255),
-                'alpha': random.randint(100, 255)
+                'vx': random.uniform(-1, 1), # Slower particles
+                'vy': random.uniform(-1, 1),
+                'size': random.randint(2, 6),
+                'color': (random.randint(100, 200), random.randint(100, 200), 255),
             })
     
-    def update(self):
+    def update(self, audio_level=0.0): # <-- Accept audio_level
         """Update particle positions"""
+        # Make particle speed reactive to audio
+        speed_boost = 1 + (audio_level * 4) 
+        
         for p in self.particles:
-            p['x'] += p['vx']
-            p['y'] += p['vy']
+            p['x'] += p['vx'] * speed_boost
+            p['y'] += p['vy'] * speed_boost
             
             # Wrap around screen
             if p['x'] < 0: p['x'] = self.width
@@ -46,7 +49,26 @@ class ParticleSystem:
             x, y = int(p['x']), int(p['y'])
             size = p['size']
             color = p['color']
-            draw.ellipse([x-size, y-size, x+size, y+size], fill=color)
+            # Use RGBA to draw with transparency
+            draw.ellipse([x-size, y-size, x+size, y+size], fill=color + (150,)) # Add alpha
+
+# Helper to find fonts
+def get_font_path():
+    """Get available font for the system"""
+    if os.name == 'nt':  # Windows
+        return 'C:\\Windows\\Fonts\\arial.ttf'
+    else:  # macOS/Linux
+        font_paths = [
+            '/System/Library/Fonts/Arial.ttf', # macOS
+            '/System/Library/Fonts/Supplemental/Arial.ttf', # macOS
+            '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf', # Linux
+            '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', # Linux
+            'arial.ttf' # Fallback
+        ]
+        for path in font_paths:
+            if os.path.exists(path):
+                return path
+        return None # Let PIL use default
 
 def create_gradient_background(width, height, colors, direction='vertical', progress=0.0):
     """
@@ -71,7 +93,11 @@ def create_gradient_background(width, height, colors, direction='vertical', prog
             else:  # radial
                 dx = x - width/2
                 dy = y - height/2
-                ratio = (math.sqrt(dx*dx + dy*dy) + shift) % (width/2) / (width/2)
+                # Ensure division by zero doesn't happen if width is 0
+                max_radius = width / 2
+                if max_radius == 0: max_radius = 1 
+                dist = math.sqrt(dx*dx + dy*dy)
+                ratio = (dist + shift) % max_radius / max_radius
             
             # Interpolate between colors
             color_index = ratio * (len(colors) - 1)
@@ -88,71 +114,95 @@ def create_gradient_background(width, height, colors, direction='vertical', prog
     
     return img
 
-def create_animated_text(width, height, text, font_size=60, progress=0.0, effect='slide'):
+def create_animated_text(width, height, text, font_size=60, progress=0.0, effect='slide', audio_level=0.0):
     """
     Create animated text with various effects
-    effect: 'slide', 'zoom', 'fade', 'wave'
+    effect: 'slide', 'zoom', 'fade', 'wave', 'pulse'
     """
     img = Image.new('RGBA', (width, height), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     
     try:
-        if os.name == 'nt':
-            font = ImageFont.truetype('C:\\Windows\\Fonts\\arial.ttf', font_size)
+        font_path = get_font_path()
+        if font_path:
+            font = ImageFont.truetype(font_path, font_size)
         else:
-            font = ImageFont.truetype('/System/Library/Fonts/Arial.ttf', font_size)
-    except:
+            font = ImageFont.load_default()
+    except Exception:
         font = ImageFont.load_default()
     
     bbox = draw.textbbox((0, 0), text, font=font)
     text_width = bbox[2] - bbox[0]
     text_height = bbox[3] - bbox[1]
     
+    # Default position
+    x = (width - text_width) // 2
+    y = (height - text_height) // 2
+    
     if effect == 'slide':
         # Slide in from left
         x = int(-text_width + (width + text_width) * progress)
-        y = (height - text_height) // 2
+    
     elif effect == 'zoom':
         # Zoom in effect
         scale = 0.1 + 0.9 * progress
         temp_font_size = int(font_size * scale)
         try:
-            if os.name == 'nt':
-                font = ImageFont.truetype('C:\\Windows\\Fonts\\arial.ttf', temp_font_size)
+            if font_path:
+                font = ImageFont.truetype(font_path, temp_font_size)
             else:
-                font = ImageFont.truetype('/System/Library/Fonts/Arial.ttf', temp_font_size)
-        except:
+                font = ImageFont.load_default()
+        except Exception:
             font = ImageFont.load_default()
         bbox = draw.textbbox((0, 0), text, font=font)
         text_width = bbox[2] - bbox[0]
         text_height = bbox[3] - bbox[1]
         x = (width - text_width) // 2
         y = (height - text_height) // 2
+
     elif effect == 'wave':
         # Wave effect - draw character by character
-        x = (width - text_width) // 2
-        y = (height - text_height) // 2
+        start_x = (width - text_width) // 2
+        current_x = start_x
         for i, char in enumerate(text):
             char_y = y + int(10 * math.sin(progress * math.pi * 2 + i * 0.5))
-            draw.text((x, char_y), char, font=font, fill=(255, 255, 255, 255))
+            draw.text((current_x, char_y), char, font=font, fill=(255, 255, 255, 255))
             char_bbox = draw.textbbox((0, 0), char, font=font)
-            x += char_bbox[2] - char_bbox[0]
-        return img
-    else:  # fade
+            current_x += char_bbox[2] - char_bbox[0]
+        return img # Return early as text is already drawn
+    
+    elif effect == 'pulse':
+        # Pulse effect based on audio
+        scale = 1.0 + (audio_level * 0.2) # Pulse 20%
+        temp_font_size = int(font_size * scale)
+        try:
+            if font_path:
+                font = ImageFont.truetype(font_path, temp_font_size)
+            else:
+                font = ImageFont.load_default()
+        except Exception:
+            font = ImageFont.load_default()
+        bbox = draw.textbbox((0, 0), text, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
         x = (width - text_width) // 2
         y = (height - text_height) // 2
+        alpha = 255
+        
+    else:  # fade
         alpha = int(255 * progress)
         draw.text((x, y), text, font=font, fill=(255, 255, 255, alpha))
-        return img
-    
-    # Draw text with glow effect
+        return img # Return early
+
+    # Draw text with glow effect (for non-wave/fade)
+    glow_alpha = int(100 + 100 * audio_level) # Glow pulses with audio
     for offset in [(2, 2), (-2, -2), (2, -2), (-2, 2)]:
-        draw.text((x + offset[0], y + offset[1]), text, font=font, fill=(0, 100, 255, 100))
+        draw.text((x + offset[0], y + offset[1]), text, font=font, fill=(0, 100, 255, glow_alpha))
     draw.text((x, y), text, font=font, fill=(255, 255, 255, 255))
     
     return img
 
-def create_animated_shapes(width, height, progress=0.0, shape_type='hexagon'):
+def create_animated_shapes(width, height, progress=0.0, shape_type='hexagon', audio_level=0.0):
     """
     Create animated geometric shapes
     shape_type: 'hexagon', 'circles', 'lines', 'grid'
@@ -165,7 +215,9 @@ def create_animated_shapes(width, height, progress=0.0, shape_type='hexagon'):
     if shape_type == 'hexagon':
         # Rotating hexagons
         for i in range(3):
-            radius = 100 + i * 60
+            # Make radius pulse with audio
+            radius_boost = 30 * audio_level
+            radius = (100 + radius_boost) + i * 60
             angle_offset = progress * 360 + i * 20
             points = []
             for j in range(6):
@@ -179,57 +231,32 @@ def create_animated_shapes(width, height, progress=0.0, shape_type='hexagon'):
         # Pulsing concentric circles
         for i in range(5):
             radius_base = 50 + i * 40
-            pulse = 10 * math.sin(progress * math.pi * 2 - i * 0.3)
+            # Make pulse stronger with audio
+            pulse = (10 + 30 * audio_level) * math.sin(progress * math.pi * 2 - i * 0.3)
             radius = int(radius_base + pulse)
+            if radius <= 0: continue
             alpha = int(255 - i * 40)
             draw.ellipse([cx-radius, cy-radius, cx+radius, cy+radius],
-                        outline=(100, 200, 255), width=2)
+                         outline=(100, 200, 255, alpha), width=2)
     
     elif shape_type == 'lines':
         # Animated connection lines
         num_points = 8
         points = []
+        radius = 150 + 50 * audio_level # Make cloud expand with audio
         for i in range(num_points):
             angle = math.radians(i * 360 / num_points + progress * 180)
-            radius = 150
             x = cx + radius * math.cos(angle)
             y = cy + radius * math.sin(angle)
             points.append((int(x), int(y)))
         
         for i in range(len(points)):
             for j in range(i+1, len(points)):
-                draw.line([points[i], points[j]], fill=(0, 150, 255), width=1)
+                draw.line([points[i], points[j]], fill=(0, 150, 255, 100), width=1)
     
     return img
 
-def apply_transition(img1, img2, progress, transition_type='fade'):
-    """
-    Apply transition between two images
-    transition_type: 'fade', 'slide', 'wipe', 'dissolve'
-    """
-    if transition_type == 'fade':
-        # Simple crossfade
-        return Image.blend(img1.convert('RGBA'), img2.convert('RGBA'), progress)
-    
-    elif transition_type == 'slide':
-        # Slide transition
-        result = img1.copy()
-        width = img1.width
-        offset = int(width * progress)
-        result.paste(img2.crop((0, 0, offset, img2.height)), (0, 0))
-        return result
-    
-    elif transition_type == 'wipe':
-        # Wipe from left to right
-        result = img1.copy()
-        width = int(img1.width * progress)
-        if width > 0:
-            result.paste(img2.crop((0, 0, width, img2.height)), (0, 0))
-        return result
-    
-    return img1
-
-def create_tech_background(width, height, progress=0.0):
+def create_tech_background(width, height, progress=0.0, audio_level=0.0):
     """
     Create animated tech-themed background with grid and particles
     """
@@ -241,7 +268,8 @@ def create_tech_background(width, height, progress=0.0):
     
     # Draw animated grid
     grid_spacing = 50
-    offset = int(progress * grid_spacing)
+    offset = int(progress * grid_spacing) % grid_spacing
+    
     for x in range(-grid_spacing + offset, width + grid_spacing, grid_spacing):
         draw.line([(x, 0), (x, height)], fill=(30, 50, 100, 50), width=1)
     for y in range(-grid_spacing + offset, height + grid_spacing, grid_spacing):
@@ -250,10 +278,10 @@ def create_tech_background(width, height, progress=0.0):
     # Add glowing dots at intersections
     for x in range(-grid_spacing + offset, width + grid_spacing, grid_spacing):
         for y in range(-grid_spacing + offset, height + grid_spacing, grid_spacing):
-            if random.random() > 0.7:
-                intensity = int(100 + 155 * (0.5 + 0.5 * math.sin(progress * math.pi * 4)))
-                draw.ellipse([x-3, y-3, x+3, y+3], fill=(0, intensity, 255, 200))
+            if (x + y) % (grid_spacing * 2) == 0: # More structured placement
+                # Make intensity pulse with audio
+                intensity = int(100 + 155 * audio_level)
+                alpha = int(150 + 105 * audio_level)
+                draw.ellipse([x-3, y-3, x+3, y+3], fill=(0, intensity, 255, alpha))
     
     return img
-
-import os  # Import at top of actual use
