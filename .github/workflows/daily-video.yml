@@ -34,8 +34,21 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-          cache: 'pip'
+          cache: 'pip' # This caches your Python libraries
       
+      # --- THIS IS THE NEW STEP YOU NEED TO ADD ---
+      - name: Cache HuggingFace Models
+        uses: actions/cache@v4
+        with:
+          # This is the default directory where transformers downloads models
+          path: ~/.cache/huggingface/hub
+          # The key identifies the cache. We include requirements.txt
+          # so if you change transformers version, it creates a new cache.
+          key: ${{ runner.os }}-huggingface-cache-v1-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-huggingface-cache-v1-
+      # --- END OF NEW STEP ---
+            
       - name: Install System Dependencies
         run: |
           sudo apt-get update
