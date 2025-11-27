@@ -135,7 +135,7 @@ def create_video_from_audio(
         rms_normalized = (rms - np.min(rms)) / (np.max(rms) - np.min(rms) + 1e-6)
         
         # Interpolate audio data to match the number of video frames
-        total_video_frames = int(duration * fps)
+        total_video_frames = math.ceil(duration * fps)
         # Create an array of frame indices [0, 1, 2, ..., total_video_frames-1]
         video_frame_indices = np.arange(total_video_frames)
         # Create an array of audio sample indices
