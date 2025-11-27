@@ -17,9 +17,9 @@ import video_animations as va # <-- Import your animations file
 
 # Video settings for social media
 VIDEO_SETTINGS = {
-    'youtube_shorts': {'width': 1080, 'height': 1920, 'fps': 30},  # 9:16
-    'tiktok': {'width': 1080, 'height': 1920, 'fps': 30},          # 9:16
-    'youtube': {'width': 1920, 'height': 1080, 'fps': 30},         # 16:9
+    'youtube_shorts': {'width': 1080, 'height': 1920, 'fps': 24},  # 9:16
+    'tiktok': {'width': 1080, 'height': 1920, 'fps': 24},          # 9:16
+    'youtube': {'width': 1920, 'height': 1080, 'fps': 24},         # 16:9
 }
 
 # This function is now a helper, we will call the enhanced one
