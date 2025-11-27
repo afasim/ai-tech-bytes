@@ -26,7 +26,7 @@ def summarize_text_huggingface(text, max_length=150, min_length=50):
         return text[:900]  # Fallback: truncate to 900 chars
     
     try:
-        summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+        summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-6-6")
         
         # Split into sentences if text is too long
         words = text.split()
@@ -53,7 +53,7 @@ def summarize_article(title, description, max_chars=300):
     # If HuggingFace is available, use it; otherwise simple truncation
     if HAS_TRANSFORMERS:
         try:
-            summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+            summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-6-6")
             summary = summarizer(combined_text[:512], max_length=100, min_length=30, do_sample=False)
             return "{}. {}".format(title, summary[0]['summary_text'])
         except:
