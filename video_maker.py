@@ -18,9 +18,9 @@ import video_animations as va # <-- Import your animations file
 
 # Video settings for social media
 VIDEO_SETTINGS = {
-    'youtube_shorts': {'width': 1080, 'height': 1920, 'fps': 24},  # 9:16
-    'tiktok': {'width': 1080, 'height': 1920, 'fps': 24},          # 9:16
-    'youtube': {'width': 1920, 'height': 1080, 'fps': 24},         # 16:9
+    'youtube_shorts': {'width': 720, 'height': 1280, 'fps': 15},  # 9:16
+    'tiktok': {'width': 1080, 'height': 1920, 'fps': 15},          # 9:16
+    'youtube': {'width': 1920, 'height': 1080, 'fps': 15},         # 16:9
 }
 
 # This function is now a helper, we will call the enhanced one
@@ -272,7 +272,7 @@ def create_multiple_formats(audio_file='data/ai_news_audio.mp3'):
     """
     Create videos in multiple formats for different platforms
     """
-    platforms = ['youtube_shorts', 'youtube']
+    platforms = ['youtube_shorts']
     created_videos = []
     
     for platform in platforms:
