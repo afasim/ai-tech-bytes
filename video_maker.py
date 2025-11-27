@@ -128,7 +128,7 @@ def create_video_from_audio(
 
         # --- AUDIO ANALYSIS (NEW) ---
         print("Analyzing audio with Librosa...")
-        y, sr = librosa.load(audio_file, sr=None)
+        y, sr = librosa.load(audio_file, sr=8000)
         # Get Root-Mean-Square (RMS) energy, a good proxy for volume
         rms = librosa.feature.rms(y=y)[0]
         # Normalize RMS to be between 0.0 and 1.0
@@ -255,7 +255,7 @@ def create_video_from_audio(
             temp_audiofile='temp-audio.m4a',
             remove_temp=True,
             threads=4,
-            preset='fast'
+            preset='ultrafast'
         )
 
         print(f"\n[OK] Video created successfully: {output_file}")
