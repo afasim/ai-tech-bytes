@@ -7,6 +7,7 @@ Enhanced with professional animations from video_animations module (particles, s
 
 import os
 import json
+import math
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from moviepy.editor import (
